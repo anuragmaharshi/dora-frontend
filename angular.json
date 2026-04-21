@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "dora-frontend-tmp": {
+    "dora-frontend": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -61,10 +61,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "dora-frontend-tmp:build:production"
+              "buildTarget": "dora-frontend:build:production"
             },
             "development": {
-              "buildTarget": "dora-frontend-tmp:build:development"
+              "buildTarget": "dora-frontend:build:development"
             }
           },
           "defaultConfiguration": "development"
