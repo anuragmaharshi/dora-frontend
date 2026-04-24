@@ -41,3 +41,6 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# OpenAPI generated client — rebuilt via npm run codegen
+/src/generated/api/
