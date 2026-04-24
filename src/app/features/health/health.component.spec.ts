@@ -4,7 +4,6 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { HealthComponent } from './health.component';
 
 describe('HealthComponent @smoke', () => {
-  let component: HealthComponent;
   let fixture: ComponentFixture<HealthComponent>;
   let httpMock: HttpTestingController;
 
@@ -13,7 +12,6 @@ describe('HealthComponent @smoke', () => {
       imports: [HealthComponent, HttpClientTestingModule]
     }).compileComponents();
     fixture = TestBed.createComponent(HealthComponent);
-    component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
   });
 
