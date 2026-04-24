@@ -1,0 +1,9 @@
+<main class="health-container" aria-label="API health status">
+  @if (state() === 'loading') {
+    <p>Checking API...</p>
+  } @else if (state() === 'healthy') {
+    <p>API: healthy (v{{ version() }} @ {{ timestamp() }})</p>
+  } @else {
+    <p>API: unreachable — docker compose up?</p>
+  }
+</main>
