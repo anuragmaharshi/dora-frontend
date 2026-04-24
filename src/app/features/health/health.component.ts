@@ -1,5 +1,4 @@
-import { Component, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal, ChangeDetectionStrategy, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { env } from '../../../core/config/env';
 
@@ -13,16 +12,15 @@ interface HealthResponse {
   selector: 'app-health',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './health.component.html',
   styleUrl: './health.component.scss'
 })
 export class HealthComponent implements OnInit {
+  private http = inject(HttpClient);
   state = signal<'loading' | 'healthy' | 'error'>('loading');
   version = signal<string>('');
   timestamp = signal<string>('');
-
-  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.http.get<HealthResponse>(`${env.apiBaseUrl}/v1/health`).subscribe({
