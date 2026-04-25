@@ -5,6 +5,10 @@ const tseslint = require("typescript-eslint");
 const angular = require("angular-eslint");
 
 module.exports = defineConfig([
+  // Exclude auto-generated OpenAPI client — never hand-edited, rules don't apply.
+  {
+    ignores: ["src/generated/**"],
+  },
   {
     files: ["**/*.ts"],
     extends: [
