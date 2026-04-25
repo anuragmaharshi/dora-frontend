@@ -4,11 +4,15 @@
   "generator-cli": {
     "version": "7.13.0"
   },
-  "inputSpec": "../dora-api/src/main/resources/openapi.yaml",
-  "generatorName": "typescript-angular",
-  "output": "src/generated/api",
-  "additionalProperties": {
-    "apiModulePrefix": "Dora",
-    "withInterfaces": true
+  "generators": {
+    "dora-api": {
+      "generatorName": "typescript-angular",
+      "inputSpec": "../dora-api/src/main/resources/openapi.yaml",
+      "output": "src/generated/api",
+      "additionalProperties": {
+        "apiModulePrefix": "Dora",
+        "withInterfaces": true
+      }
+    }
   }
 }
