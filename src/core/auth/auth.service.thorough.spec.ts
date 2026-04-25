@@ -756,11 +756,16 @@ describe('AC-6 — AuthService: bootstrap rehydration from sessionStorage', () =
    * instantiate AuthService — currentUser will be non-null (wrong).
    */
   it('[BUG-AUTH-001] clears sessionStorage and currentUser when stored JWT is expired', () => {
-    pending(
-      'BUG-AUTH-001: auth.service.ts does not validate JWT exp claim during rehydration. ' +
-      'The parseJwtClaims() function must reject tokens where exp < Date.now()/1000. ' +
-      'Until fixed, an expired token survives a page refresh — a security gap per LLD-02 §3.',
-    );
+    const expiredJwt = makeExpiredJwt();
+    sessionStorage.setItem('dora_token', expiredJwt);
+
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient()],
+    });
+    const service = TestBed.inject(AuthService);
+
+    expect(service.currentUser()).toBeNull();
+    expect(sessionStorage.getItem('dora_token')).toBeNull();
   });
 
   it('rehydrates currentUser tenantId and mfaEnabled from stored JWT', () => {
