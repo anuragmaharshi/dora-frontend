@@ -23,6 +23,10 @@ function parseJwtClaims(token: string): CurrentUser | null {
     // JWT Base64url → Base64 standard → UTF-8 JSON
     const json = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'));
     const claims = JSON.parse(json);
+    // Reject expired tokens — exp is Unix seconds (BUG-AUTH-001 fix)
+    if (typeof claims['exp'] === 'number' && claims['exp'] < Date.now() / 1000) {
+      return null;
+    }
     return {
       email: claims['username'] ?? claims['sub'] ?? '',
       roles: Array.isArray(claims['roles']) ? claims['roles'] : [],
