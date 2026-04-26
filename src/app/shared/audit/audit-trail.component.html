@@ -1,0 +1,87 @@
+<section class="audit-trail" aria-label="Audit trail">
+  <h2 class="audit-trail__heading">Audit Trail</h2>
+
+  <!-- Loading state -->
+  @if (loadState() === 'loading') {
+    <p class="audit-trail__status" role="status" aria-live="polite">Loading audit history…</p>
+  }
+
+  <!-- Error state -->
+  @if (loadState() === 'error') {
+    <p class="audit-trail__error" role="alert">{{ errorMessage() }}</p>
+  }
+
+  <!-- Empty state -->
+  @if (loadState() === 'loaded' && rows().length === 0) {
+    <p class="audit-trail__empty" data-testid="empty-state">No audit history found for this entity.</p>
+  }
+
+  <!-- Populated state -->
+  @if (loadState() === 'loaded' && rows().length > 0) {
+    <ol class="audit-trail__list" aria-label="Audit entries">
+      @for (entry of rows(); track entry.id) {
+        <li class="audit-trail__entry">
+          <div class="audit-trail__meta">
+            <time
+              class="audit-trail__timestamp"
+              [dateTime]="entry.createdAt"
+              [title]="entry.createdAt"
+            >{{ entry.createdAt | date: 'yyyy-MM-dd HH:mm:ss' : 'UTC' }}</time>
+            <span class="audit-trail__actor">{{ entry.actorUsername }}</span>
+            <span class="audit-trail__action" data-testid="action-badge">{{ entry.action }}</span>
+          </div>
+
+          <!-- Diff collapsible — uses native <details>/<summary> for keyboard
+               accessibility; no JS toggle needed, browser handles focus/ARIA. -->
+          @if (entry.beforeState !== null || entry.afterState !== null) {
+            <details
+              class="audit-trail__diff"
+              [attr.aria-label]="'State diff for ' + entry.action + ' at ' + entry.createdAt"
+            >
+              <summary class="audit-trail__diff-toggle">Show state diff</summary>
+
+              <div class="audit-trail__diff-body">
+                @if (entry.beforeState !== null) {
+                  <div class="audit-trail__diff-pane">
+                    <h3 class="audit-trail__diff-label">Before</h3>
+                    <pre class="audit-trail__pre" aria-label="State before change">{{ formatJson(entry.beforeState) }}</pre>
+                  </div>
+                }
+                @if (entry.afterState !== null) {
+                  <div class="audit-trail__diff-pane">
+                    <h3 class="audit-trail__diff-label">After</h3>
+                    <pre class="audit-trail__pre" aria-label="State after change">{{ formatJson(entry.afterState) }}</pre>
+                  </div>
+                }
+              </div>
+            </details>
+          }
+        </li>
+      }
+    </ol>
+
+    <!-- Pagination controls -->
+    @let p = page();
+    @if (p && p.totalPages > 1) {
+      <nav class="audit-trail__pagination" aria-label="Audit trail pagination">
+        <button
+          class="audit-trail__page-btn"
+          (click)="prevPage()"
+          [disabled]="p.number === 0"
+          aria-label="Previous page"
+        >Previous</button>
+
+        <span class="audit-trail__page-info" aria-current="page">
+          Page {{ p.number + 1 }} of {{ p.totalPages }}
+        </span>
+
+        <button
+          class="audit-trail__page-btn"
+          (click)="nextPage()"
+          [disabled]="p.number >= p.totalPages - 1"
+          aria-label="Next page"
+        >Next</button>
+      </nav>
+    }
+  }
+</section>
