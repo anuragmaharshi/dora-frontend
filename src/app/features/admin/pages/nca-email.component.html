@@ -1,0 +1,112 @@
+<main class="admin-page" aria-labelledby="nca-email-heading">
+  <h1 id="nca-email-heading">NCA Email Configuration</h1>
+
+  @if (loadState() === 'loading') {
+    <p role="status" aria-live="polite">Loading configuration…</p>
+  }
+
+  @if (loadState() === 'error') {
+    <p class="error-message" role="alert">{{ errorMessage() }}</p>
+  }
+
+  @if (loadState() === 'loaded') {
+    <form
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      aria-label="NCA email configuration form"
+      novalidate
+    >
+      <div class="form-field">
+        <label for="sender">Sender address <span aria-hidden="true">*</span></label>
+        <input
+          id="sender"
+          type="email"
+          formControlName="sender"
+          aria-required="true"
+          [attr.aria-invalid]="f['sender'].invalid && f['sender'].touched"
+          autocomplete="email"
+          placeholder="noreply@example.com"
+        />
+        @if (f['sender'].errors?.['required'] && f['sender'].touched) {
+          <span class="field-error" role="alert" aria-live="polite">Sender address is required.</span>
+        }
+        @if (f['sender'].errors?.['email'] && f['sender'].touched) {
+          <span class="field-error" role="alert" aria-live="polite"
+            >Enter a valid sender email address.</span
+          >
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="recipient">NCA recipient address <span aria-hidden="true">*</span></label>
+        <input
+          id="recipient"
+          type="email"
+          formControlName="recipient"
+          aria-required="true"
+          [attr.aria-invalid]="f['recipient'].invalid && f['recipient'].touched"
+          autocomplete="email"
+          placeholder="nca@authority.example"
+        />
+        @if (f['recipient'].errors?.['required'] && f['recipient'].touched) {
+          <span class="field-error" role="alert" aria-live="polite"
+            >NCA recipient address is required.</span
+          >
+        }
+        @if (f['recipient'].errors?.['email'] && f['recipient'].touched) {
+          <span class="field-error" role="alert" aria-live="polite"
+            >Enter a valid recipient email address.</span
+          >
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="subjectTemplate">
+          Subject template <span aria-hidden="true">*</span>
+        </label>
+        <p class="hint" id="subject-template-hint">
+          <!-- OPEN-Q: confirm full list of allowed Mustache placeholder tokens once Q-2 is resolved. -->
+          Supported placeholders: <code>incidentId</code>, <code>reportDate</code>.
+          Wrap in double-curly-braces in the template, e.g.
+          <code>[DORA][incidentId] Initial Notification</code>. Max 500 characters.
+        </p>
+        <input
+          id="subjectTemplate"
+          type="text"
+          formControlName="subjectTemplate"
+          aria-required="true"
+          aria-describedby="subject-template-hint"
+          [attr.aria-invalid]="f['subjectTemplate'].invalid && f['subjectTemplate'].touched"
+          maxlength="500"
+          [placeholder]="subjectTemplatePlaceholder"
+        />
+        @if (f['subjectTemplate'].errors?.['required'] && f['subjectTemplate'].touched) {
+          <span class="field-error" role="alert" aria-live="polite"
+            >Subject template is required.</span
+          >
+        }
+        @if (f['subjectTemplate'].errors?.['maxlength'] && f['subjectTemplate'].touched) {
+          <span class="field-error" role="alert" aria-live="polite"
+            >Subject template must be 500 characters or fewer.</span
+          >
+        }
+      </div>
+
+      @if (saveState() === 'saved') {
+        <p class="success-message" role="status" aria-live="polite">Configuration saved.</p>
+      }
+
+      @if (saveState() === 'error') {
+        <p class="error-message" role="alert">{{ saveError() }}</p>
+      }
+
+      <button
+        type="submit"
+        [disabled]="saveState() === 'saving'"
+        aria-label="Save NCA email configuration"
+      >
+        {{ saveState() === 'saving' ? 'Saving…' : 'Save' }}
+      </button>
+    </form>
+  }
+</main>
