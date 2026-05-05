@@ -1,0 +1,106 @@
+<main class="admin-page" aria-labelledby="client-base-heading">
+  <h1 id="client-base-heading">Client Base</h1>
+
+  <section class="set-section" aria-labelledby="set-client-base-heading">
+    <h2 id="set-client-base-heading">Set client base count</h2>
+    <p class="hint">
+      The client base count is the denominator for DORA C1 threshold calculations. Each entry is
+      appended to the history; previous values are preserved.
+    </p>
+
+    <form
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      aria-label="Set client base count form"
+      novalidate
+    >
+      <div class="form-field">
+        <label for="clientCount">Client count <span aria-hidden="true">*</span></label>
+        <input
+          id="clientCount"
+          type="number"
+          formControlName="clientCount"
+          aria-required="true"
+          [attr.aria-invalid]="f['clientCount'].invalid && f['clientCount'].touched"
+          min="0"
+        />
+        @if (f['clientCount'].errors?.['required'] && f['clientCount'].touched) {
+          <span class="field-error" role="alert" aria-live="polite">Client count is required.</span>
+        }
+        @if (f['clientCount'].errors?.['min'] && f['clientCount'].touched) {
+          <span class="field-error" role="alert" aria-live="polite"
+            >Client count must be 0 or greater.</span
+          >
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="effectiveFrom">Effective from <span aria-hidden="true">*</span></label>
+        <input
+          id="effectiveFrom"
+          type="date"
+          formControlName="effectiveFrom"
+          aria-required="true"
+          [attr.aria-invalid]="f['effectiveFrom'].invalid && f['effectiveFrom'].touched"
+        />
+        @if (f['effectiveFrom'].invalid && f['effectiveFrom'].touched) {
+          <span class="field-error" role="alert" aria-live="polite">Effective date is required.</span>
+        }
+      </div>
+
+      @if (saveState() === 'saved') {
+        <p class="success-message" role="status" aria-live="polite">Client base count saved.</p>
+      }
+
+      @if (saveState() === 'error') {
+        <p class="error-message" role="alert">{{ saveError() }}</p>
+      }
+
+      <button
+        type="submit"
+        [disabled]="saveState() === 'saving'"
+        aria-label="Save client base count"
+      >
+        {{ saveState() === 'saving' ? 'Saving…' : 'Save' }}
+      </button>
+    </form>
+  </section>
+
+  <section class="history-section" aria-labelledby="history-heading">
+    <h2 id="history-heading">History</h2>
+
+    @if (loadState() === 'loading') {
+      <p role="status" aria-live="polite">Loading history…</p>
+    }
+
+    @if (loadState() === 'error') {
+      <p class="error-message" role="alert">{{ errorMessage() }}</p>
+    }
+
+    @if (loadState() === 'loaded') {
+      @if (entries().length === 0) {
+        <p class="empty-state">No client base entries recorded yet.</p>
+      } @else {
+        <table aria-label="Client base count history">
+          <caption class="visually-hidden">Historical client base count entries</caption>
+          <thead>
+            <tr>
+              <th scope="col">Client count</th>
+              <th scope="col">Effective from</th>
+              <th scope="col">Recorded at</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entry of entries(); track entry.id) {
+              <tr>
+                <td>{{ entry.clientCount | number }}</td>
+                <td>{{ entry.effectiveFrom | slice: 0 : 10 }}</td>
+                <td>{{ entry.createdAt | slice: 0 : 10 }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    }
+  </section>
+</main>

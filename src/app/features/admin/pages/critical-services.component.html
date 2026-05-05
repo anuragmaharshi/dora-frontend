@@ -1,0 +1,98 @@
+<main class="admin-page" aria-labelledby="critical-services-heading">
+  <h1 id="critical-services-heading">Critical Services</h1>
+
+  @if (loadState() === 'loading') {
+    <p role="status" aria-live="polite">Loading services…</p>
+  }
+
+  @if (loadState() === 'error') {
+    <p class="error-message" role="alert">{{ errorMessage() }}</p>
+  }
+
+  @if (loadState() === 'loaded') {
+    <section aria-label="Active critical services list">
+      @if (services().length === 0) {
+        <p class="empty-state">No active critical services. Add one below.</p>
+      } @else {
+        <table aria-label="Active critical services">
+          <caption class="visually-hidden">List of active critical services</caption>
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Description</th>
+              <th scope="col">Created</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (service of services(); track service.id) {
+              <tr>
+                <td>{{ service.name }}</td>
+                <td>{{ service.description ?? '—' }}</td>
+                <td>{{ service.createdAt | slice: 0 : 10 }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn-archive"
+                    [disabled]="isArchiving(service.id)"
+                    [attr.aria-label]="'Archive ' + service.name"
+                    (click)="onArchive(service)"
+                  >
+                    {{ isArchiving(service.id) ? 'Archiving…' : 'Archive' }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+
+    <section class="add-section" aria-labelledby="add-service-heading">
+      <h2 id="add-service-heading">Add critical service</h2>
+
+      <form
+        [formGroup]="addForm"
+        (ngSubmit)="onAdd()"
+        aria-label="Add critical service form"
+        novalidate
+      >
+        <div class="form-field">
+          <label for="serviceName">Name <span aria-hidden="true">*</span></label>
+          <input
+            id="serviceName"
+            type="text"
+            formControlName="name"
+            aria-required="true"
+            [attr.aria-invalid]="f['name'].invalid && f['name'].touched"
+          />
+          @if (f['name'].invalid && f['name'].touched) {
+            <span class="field-error" role="alert" aria-live="polite">Service name is required.</span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="serviceDescription">Description (optional)</label>
+          <textarea
+            id="serviceDescription"
+            formControlName="description"
+            rows="3"
+            aria-label="Service description (optional)"
+          ></textarea>
+        </div>
+
+        @if (addState() === 'error') {
+          <p class="error-message" role="alert">{{ addError() }}</p>
+        }
+
+        <button
+          type="submit"
+          [disabled]="addState() === 'saving'"
+          aria-label="Add critical service"
+        >
+          {{ addState() === 'saving' ? 'Adding…' : 'Add service' }}
+        </button>
+      </form>
+    </section>
+  }
+</main>

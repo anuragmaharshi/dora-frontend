@@ -14,6 +14,16 @@ export const routes: Routes = [
   { path: 'logout', component: LogoutComponent, canActivate: [authGuard] },
   { path: '', component: HealthComponent, canActivate: [authGuard] },
 
+  // Admin feature — lazy-loaded; individual routes carry roleGuard(['PLATFORM_ADMIN'])
+  // AC-5: PLATFORM_ADMIN navigating to /incidents, /reports, /audit, /dashboard
+  // is rejected by those routes' guards (which do not include PLATFORM_ADMIN).
+  // AC-7: bank roles hitting /admin/** are rejected by roleGuard on each child route.
+  {
+    path: 'admin',
+    loadChildren: () =>
+      import('./features/admin/admin.routes').then((m) => m.adminRoutes),
+  },
+
   // Fallback — redirect unknown paths to root (which itself redirects to /login if unauthed)
   { path: '**', redirectTo: '' },
 ];

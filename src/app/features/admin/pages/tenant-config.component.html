@@ -1,0 +1,119 @@
+<main class="admin-page" aria-labelledby="tenant-heading">
+  <h1 id="tenant-heading">Tenant Configuration</h1>
+
+  @if (loadState() === 'loading') {
+    <p role="status" aria-live="polite">Loading configuration…</p>
+  }
+
+  @if (loadState() === 'error') {
+    <p class="error-message" role="alert">{{ errorMessage() }}</p>
+  }
+
+  @if (loadState() === 'loaded') {
+    <form
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      aria-label="Tenant configuration form"
+      novalidate
+    >
+      <div class="form-field">
+        <label for="legalName">Legal name <span aria-hidden="true">*</span></label>
+        <input
+          id="legalName"
+          type="text"
+          formControlName="legalName"
+          aria-required="true"
+          [attr.aria-invalid]="f['legalName'].invalid && f['legalName'].touched"
+          autocomplete="organization"
+        />
+        @if (f['legalName'].invalid && f['legalName'].touched) {
+          <span class="field-error" role="alert" aria-live="polite">Legal name is required.</span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="lei">LEI (20-char alphanumeric)</label>
+        <input
+          id="lei"
+          type="text"
+          formControlName="lei"
+          aria-label="Legal Entity Identifier — 20 uppercase alphanumeric characters"
+          [attr.aria-invalid]="f['lei'].invalid && f['lei'].touched"
+          maxlength="20"
+        />
+        @if (f['lei'].invalid && f['lei'].touched) {
+          <span class="field-error" role="alert" aria-live="polite"
+            >LEI must be exactly 20 uppercase alphanumeric characters.</span
+          >
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="ncaName">NCA name</label>
+        <input
+          id="ncaName"
+          type="text"
+          formControlName="ncaName"
+          aria-label="National Competent Authority name"
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="ncaEmail">NCA email</label>
+        <input
+          id="ncaEmail"
+          type="email"
+          formControlName="ncaEmail"
+          [attr.aria-invalid]="f['ncaEmail'].invalid && f['ncaEmail'].touched"
+          autocomplete="email"
+        />
+        @if (f['ncaEmail'].invalid && f['ncaEmail'].touched) {
+          <span class="field-error" role="alert" aria-live="polite">Enter a valid email address.</span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="jurisdictionIso">Jurisdiction (ISO 2-letter code)</label>
+        <input
+          id="jurisdictionIso"
+          type="text"
+          formControlName="jurisdictionIso"
+          aria-label="Jurisdiction ISO 3166-1 alpha-2 code, e.g. DE or FR"
+          [attr.aria-invalid]="f['jurisdictionIso'].invalid && f['jurisdictionIso'].touched"
+          maxlength="2"
+        />
+        @if (f['jurisdictionIso'].invalid && f['jurisdictionIso'].touched) {
+          <span class="field-error" role="alert" aria-live="polite"
+            >Jurisdiction must be a 2-letter ISO code (e.g. DE).</span
+          >
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="primaryComplianceContactId">Primary compliance contact (user ID)</label>
+        <input
+          id="primaryComplianceContactId"
+          type="text"
+          formControlName="primaryComplianceContactId"
+          aria-label="UUID of the primary compliance contact user"
+        />
+      </div>
+
+      @if (saveState() === 'saved') {
+        <p class="success-message" role="status" aria-live="polite">Configuration saved.</p>
+      }
+
+      @if (saveState() === 'error') {
+        <p class="error-message" role="alert">{{ saveError() }}</p>
+      }
+
+      <button
+        type="submit"
+        [disabled]="saveState() === 'saving'"
+        aria-label="Save tenant configuration"
+      >
+        {{ saveState() === 'saving' ? 'Saving…' : 'Save' }}
+      </button>
+    </form>
+  }
+</main>
