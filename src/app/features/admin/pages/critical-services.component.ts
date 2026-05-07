@@ -1,10 +1,12 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   OnInit,
   inject,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
@@ -35,6 +37,7 @@ import { CriticalService } from '../models/admin.view-model';
 export class CriticalServicesComponent implements OnInit {
   private readonly adminService = inject(AdminService);
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly loadState = signal<'loading' | 'loaded' | 'error'>('loading');
   readonly services = signal<CriticalService[]>([]);
@@ -56,7 +59,7 @@ export class CriticalServicesComponent implements OnInit {
 
   private loadServices(): void {
     this.loadState.set('loading');
-    this.adminService.listCriticalServices().subscribe({
+    this.adminService.listCriticalServices().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (list) => {
         // Show only active services by default (AC-2 spec).
         this.services.set(list.filter((s) => s.active));
@@ -81,6 +84,7 @@ export class CriticalServicesComponent implements OnInit {
         name: raw['name'],
         description: raw['description'] || null,
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.addState.set('idle');
@@ -97,7 +101,7 @@ export class CriticalServicesComponent implements OnInit {
 
   onArchive(service: CriticalService): void {
     this.archiveState.update((state) => ({ ...state, [service.id]: 'archiving' }));
-    this.adminService.archiveCriticalService(service.id).subscribe({
+    this.adminService.archiveCriticalService(service.id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.archiveState.update((state) => ({ ...state, [service.id]: 'idle' }));
         this.loadServices();

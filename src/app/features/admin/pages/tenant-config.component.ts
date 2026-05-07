@@ -1,10 +1,12 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   OnInit,
   inject,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
@@ -34,6 +36,7 @@ import { TenantConfigUpdate } from '../models/admin.view-model';
 export class TenantConfigComponent implements OnInit {
   private readonly adminService = inject(AdminService);
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly loadState = signal<'loading' | 'loaded' | 'error'>('loading');
   readonly saveState = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -48,12 +51,12 @@ export class TenantConfigComponent implements OnInit {
     lei: ['', [Validators.pattern(this.LEI_PATTERN)]],
     ncaName: [''],
     ncaEmail: ['', [Validators.email]],
-    jurisdictionIso: ['', [Validators.maxLength(2)]],
+    jurisdictionIso: ['', [Validators.minLength(2), Validators.maxLength(2)]],
     primaryComplianceContactId: [''],
   });
 
   ngOnInit(): void {
-    this.adminService.getTenant().subscribe({
+    this.adminService.getTenant().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (config) => {
         this.form.patchValue({
           legalName: config.legalName,
@@ -88,7 +91,7 @@ export class TenantConfigComponent implements OnInit {
       primaryComplianceContactId: raw['primaryComplianceContactId'] || null,
     };
 
-    this.adminService.updateTenant(update).subscribe({
+    this.adminService.updateTenant(update).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.saveState.set('saved');
         this.saveError.set('');
