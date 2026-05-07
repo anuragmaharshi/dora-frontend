@@ -1,10 +1,12 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   OnInit,
   inject,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
@@ -34,6 +36,7 @@ import { ClientBaseEntry } from '../models/admin.view-model';
 export class ClientBaseComponent implements OnInit {
   private readonly adminService = inject(AdminService);
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly loadState = signal<'loading' | 'loaded' | 'error'>('loading');
   readonly saveState = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -52,7 +55,7 @@ export class ClientBaseComponent implements OnInit {
 
   private loadHistory(): void {
     this.loadState.set('loading');
-    this.adminService.getClientBaseHistory().subscribe({
+    this.adminService.getClientBaseHistory().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (history) => {
         // API returns entries sorted by effectiveFrom desc per LLD spec.
         this.entries.set(history.entries);
@@ -77,6 +80,7 @@ export class ClientBaseComponent implements OnInit {
         clientCount: raw['clientCount'],
         effectiveFrom: raw['effectiveFrom'],
       })
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.saveState.set('saved');
