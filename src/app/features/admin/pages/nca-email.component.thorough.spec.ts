@@ -1,5 +1,5 @@
 // @thorough — AC-4: NcaEmailComponent — loading, error, DOM, validation, accessibility
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Subject, of, throwError } from 'rxjs';
 import { NcaEmailComponent } from './nca-email.component';
@@ -129,7 +129,6 @@ describe('NcaEmailComponent — thorough', () => {
   // ---------------------------------------------------------------------------
   describe('AC-4 — form renders and is populated after successful GET', () => {
     let fixture: ComponentFixture<NcaEmailComponent>;
-    let component: NcaEmailComponent;
     let adminService: jasmine.SpyObj<AdminService>;
 
     beforeEach(async () => {
@@ -140,7 +139,6 @@ describe('NcaEmailComponent — thorough', () => {
         providers: [{ provide: AdminService, useValue: adminService }],
       }).compileComponents();
       fixture = TestBed.createComponent(NcaEmailComponent);
-      component = fixture.componentInstance;
       fixture.detectChanges();
     });
 

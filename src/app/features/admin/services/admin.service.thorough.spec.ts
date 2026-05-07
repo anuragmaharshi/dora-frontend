@@ -16,9 +16,6 @@ class MockLoginComponent {}
 @Component({ standalone: true, template: '<p>403</p>' })
 class Mock403Component {}
 
-@Component({ standalone: true, template: '<p>admin</p>' })
-class MockAdminComponent {}
-
 function buildAuthServiceSpy(
   authenticated: boolean,
   roles: string[],

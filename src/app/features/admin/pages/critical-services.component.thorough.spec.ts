@@ -1,5 +1,5 @@
 // @thorough — AC-2: CriticalServicesComponent — loading, empty, error, DOM, validation, accessibility
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Subject, of, throwError } from 'rxjs';
 import { CriticalServicesComponent } from './critical-services.component';
