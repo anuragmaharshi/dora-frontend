@@ -1,10 +1,12 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   OnInit,
   inject,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
@@ -40,6 +42,7 @@ import { NcaEmailConfigUpdate } from '../models/admin.view-model';
 export class NcaEmailComponent implements OnInit {
   private readonly adminService = inject(AdminService);
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly loadState = signal<'loading' | 'loaded' | 'error'>('loading');
   readonly saveState = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -57,7 +60,7 @@ export class NcaEmailComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.adminService.getNcaEmailConfig().subscribe({
+    this.adminService.getNcaEmailConfig().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (config) => {
         this.form.patchValue({
           sender: config.sender,
@@ -86,7 +89,7 @@ export class NcaEmailComponent implements OnInit {
       subjectTemplate: raw['subjectTemplate'],
     };
 
-    this.adminService.updateNcaEmailConfig(update).subscribe({
+    this.adminService.updateNcaEmailConfig(update).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.saveState.set('saved');
         this.saveError.set('');
