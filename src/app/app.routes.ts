@@ -24,6 +24,15 @@ export const routes: Routes = [
       import('./features/admin/admin.routes').then((m) => m.adminRoutes),
   },
 
+  // Incidents feature — LLD-05.
+  // /incidents/new requires roleGuard; /incidents/:id requires authGuard (see incidents.routes.ts).
+  // PLATFORM_ADMIN is excluded from both routes by the guards within incidentRoutes.
+  {
+    path: 'incidents',
+    loadChildren: () =>
+      import('./features/incidents/incidents.routes').then((m) => m.incidentRoutes),
+  },
+
   // Fallback — redirect unknown paths to root (which itself redirects to /login if unauthed)
   { path: '**', redirectTo: '' },
 ];

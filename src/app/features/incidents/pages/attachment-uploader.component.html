@@ -1,0 +1,79 @@
+<section class="uploader" aria-labelledby="uploader-heading">
+  <h3 id="uploader-heading" class="visually-hidden">Upload Attachments</h3>
+
+  <!-- Drop zone -->
+  <div
+    class="drop-zone"
+    [class.dragging]="isDragging()"
+    role="button"
+    tabindex="0"
+    aria-label="Drag and drop files here, or press Enter to open file picker"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (keydown.enter)="fileInput.click()"
+    (keydown.space)="fileInput.click()"
+    (click)="fileInput.click()"
+  >
+    <p>Drag &amp; drop files here, or <span class="link-style">click to browse</span></p>
+    <p class="hint">Max 50 MB per file</p>
+  </div>
+
+  <!-- Hidden file input -->
+  <input
+    #fileInput
+    type="file"
+    multiple
+    class="visually-hidden"
+    aria-label="File picker"
+    (change)="onFileSelected($event)"
+  />
+
+  <!-- Upload slots list -->
+  @if (slots().length > 0) {
+    <ul class="upload-slots" aria-label="Upload queue" aria-live="polite">
+      @for (slot of slots(); track slot.file.name + slot.file.size) {
+        <li class="upload-slot" [class]="'slot-' + slot.state">
+          <span class="slot-filename" aria-label="File: {{ slot.file.name }}">
+            {{ slot.file.name }}
+          </span>
+
+          @if (slot.state === 'uploading') {
+            <progress
+              [value]="slot.progress"
+              max="100"
+              [attr.aria-valuenow]="slot.progress"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              [attr.aria-label]="'Upload progress for ' + slot.file.name"
+            ></progress>
+            <span class="slot-status" aria-live="polite">Uploading… {{ slot.progress }}%</span>
+          }
+
+          @if (slot.state === 'done') {
+            <span class="slot-status slot-done" aria-live="polite" role="status">
+              Uploaded
+            </span>
+          }
+
+          @if (slot.state === 'error') {
+            <span class="slot-status slot-error" role="alert">
+              Error: {{ slot.errorMessage }}
+            </span>
+          }
+
+          @if (slot.state === 'done' || slot.state === 'error') {
+            <button
+              type="button"
+              class="btn-remove-slot"
+              (click)="removeSlot(slot)"
+              [attr.aria-label]="'Dismiss ' + slot.file.name + ' from upload list'"
+            >
+              Dismiss
+            </button>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>

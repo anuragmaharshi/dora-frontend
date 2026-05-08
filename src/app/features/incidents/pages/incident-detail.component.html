@@ -1,0 +1,208 @@
+<main class="incident-detail-page" aria-labelledby="incident-detail-heading">
+
+  @if (loadState() === 'loading') {
+    <p role="status" aria-live="polite">Loading incident…</p>
+  }
+
+  @if (loadState() === 'error') {
+    <p class="error-message" role="alert">{{ errorMessage() }}</p>
+  }
+
+  @if (loadState() === 'loaded' && incident(); as inc) {
+    <!-- Incident ID badge + heading (AC-2) -->
+    <header class="incident-header">
+      <span class="incident-id-badge" aria-label="Incident ID">{{ inc.incidentId }}</span>
+      <h1 id="incident-detail-heading">{{ inc.title }}</h1>
+      <span class="status-badge" [class]="'status-' + inc.status.toLowerCase()" aria-label="Status">
+        {{ inc.status | titlecase }}
+      </span>
+    </header>
+
+    <!-- Meta row: detection datetime (read-only, AC-2) + created-by -->
+    <dl class="incident-meta" aria-label="Incident metadata">
+      <div class="meta-item">
+        <dt>Detected At</dt>
+        <!-- AC-2: detection_datetime is displayed read-only; no form control exists. -->
+        <dd>
+          <time [dateTime]="inc.detectionDatetime" aria-label="Detection datetime">
+            {{ inc.detectionDatetime | date: 'dd MMM yyyy HH:mm' : 'UTC' }} UTC
+          </time>
+        </dd>
+      </div>
+      <div class="meta-item">
+        <dt>Created At</dt>
+        <dd>
+          <time [dateTime]="inc.createdAt">
+            {{ inc.createdAt | date: 'dd MMM yyyy HH:mm' : 'UTC' }} UTC
+          </time>
+        </dd>
+      </div>
+      <div class="meta-item">
+        <dt>Created By</dt>
+        <dd>{{ inc.createdBy }}</dd>
+      </div>
+    </dl>
+
+    <!-- Tabs -->
+    <nav class="tab-nav" role="tablist" aria-label="Incident detail tabs">
+      <button
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'overview'"
+        [class.active]="activeTab() === 'overview'"
+        (click)="setTab('overview')"
+        aria-controls="tab-overview"
+        id="tab-btn-overview"
+      >
+        Overview
+      </button>
+      <button
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'attachments'"
+        [class.active]="activeTab() === 'attachments'"
+        (click)="setTab('attachments')"
+        aria-controls="tab-attachments"
+        id="tab-btn-attachments"
+      >
+        Attachments
+        @if (inc.attachments.length > 0) {
+          <span class="tab-count" aria-label="{{ inc.attachments.length }} attachment(s)">
+            ({{ inc.attachments.length }})
+          </span>
+        }
+      </button>
+      <button
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'assets'"
+        [class.active]="activeTab() === 'assets'"
+        (click)="setTab('assets')"
+        aria-controls="tab-assets"
+        id="tab-btn-assets"
+      >
+        ICT Assets
+        @if (inc.assets.length > 0) {
+          <span class="tab-count" aria-label="{{ inc.assets.length }} asset(s)">
+            ({{ inc.assets.length }})
+          </span>
+        }
+      </button>
+    </nav>
+
+    <!-- Overview tab -->
+    <section
+      id="tab-overview"
+      role="tabpanel"
+      aria-labelledby="tab-btn-overview"
+      [hidden]="activeTab() !== 'overview'"
+    >
+      <h2 class="visually-hidden">Overview</h2>
+
+      <div class="detail-section">
+        <h3>Description</h3>
+        <p>{{ inc.description }}</p>
+      </div>
+
+      @if (inc.impactEstimate) {
+        <div class="detail-section">
+          <h3>Impact Estimate</h3>
+          <p>{{ inc.impactEstimate }}</p>
+        </div>
+      }
+
+      @if (inc.services.length > 0) {
+        <div class="detail-section">
+          <h3>Affected Critical Services</h3>
+          <ul aria-label="Linked critical services">
+            @for (svc of inc.services; track svc.serviceId) {
+              <li>{{ svc.name }}</li>
+            }
+          </ul>
+        </div>
+      } @else {
+        <div class="detail-section">
+          <h3>Affected Critical Services</h3>
+          <p class="empty-state">No critical services linked.</p>
+        </div>
+      }
+    </section>
+
+    <!-- Attachments tab -->
+    <section
+      id="tab-attachments"
+      role="tabpanel"
+      aria-labelledby="tab-btn-attachments"
+      [hidden]="activeTab() !== 'attachments'"
+    >
+      <h2 class="visually-hidden">Attachments</h2>
+
+      <!-- Attachment uploader (AC-3) -->
+      <app-attachment-uploader
+        [incidentId]="incidentId"
+        (uploaded)="onAttachmentUploaded()"
+      />
+
+      @if (inc.attachments.length === 0) {
+        <p class="empty-state">No attachments yet.</p>
+      } @else {
+        <table class="attachments-table" aria-label="Incident attachments">
+          <thead>
+            <tr>
+              <th scope="col">Filename</th>
+              <th scope="col">Type</th>
+              <th scope="col">Size</th>
+              <th scope="col">Status</th>
+              <th scope="col">Uploaded</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (att of inc.attachments; track att.id) {
+              <tr>
+                <td>{{ att.filename }}</td>
+                <td>{{ att.contentType }}</td>
+                <td>{{ att.sizeBytes | number }} bytes</td>
+                <td>
+                  <span [class]="'att-status att-status-' + att.status.toLowerCase()">
+                    {{ att.status }}
+                  </span>
+                </td>
+                <td>{{ att.createdAt | date: 'dd MMM yyyy HH:mm' : 'UTC' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+
+    <!-- Assets tab -->
+    <section
+      id="tab-assets"
+      role="tabpanel"
+      aria-labelledby="tab-btn-assets"
+      [hidden]="activeTab() !== 'assets'"
+    >
+      <h2 class="visually-hidden">ICT Assets</h2>
+
+      @if (inc.assets.length === 0) {
+        <p class="empty-state">No ICT assets linked.</p>
+      } @else {
+        <table class="assets-table" aria-label="Linked ICT assets">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Type</th>
+              <th scope="col">Linked At</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (asset of inc.assets; track asset.id) {
+              <tr>
+                <td>{{ asset.name }}</td>
+                <td>{{ asset.type }}</td>
+                <td>{{ asset.createdAt | date: 'dd MMM yyyy HH:mm' : 'UTC' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  }
+</main>

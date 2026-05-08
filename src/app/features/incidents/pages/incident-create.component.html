@@ -1,0 +1,186 @@
+<main class="incident-create-page" aria-labelledby="create-incident-heading">
+  <h1 id="create-incident-heading">Report New Incident</h1>
+
+  <p class="help-text">
+    The detection date and time will be recorded automatically at submission.
+    <!-- AC-2: detection_datetime is server-stamped; no editable field is present. -->
+  </p>
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+    aria-label="Report new incident form"
+    novalidate
+  >
+    <!-- Title -->
+    <div class="form-field">
+      <label for="incidentTitle">Title <span aria-hidden="true">*</span></label>
+      <input
+        id="incidentTitle"
+        type="text"
+        formControlName="title"
+        aria-required="true"
+        [attr.aria-invalid]="f['title'].invalid && f['title'].touched"
+        [attr.aria-describedby]="(f['title'].invalid && f['title'].touched) ? 'titleError' : null"
+        placeholder="Brief description of the incident"
+        maxlength="200"
+      />
+      @if (f['title'].invalid && f['title'].touched) {
+        <span id="titleError" class="field-error" role="alert" aria-live="polite">
+          @if (f['title'].hasError('required')) {
+            Title is required.
+          } @else if (f['title'].hasError('maxlength')) {
+            Title must be 200 characters or fewer.
+          }
+        </span>
+      }
+    </div>
+
+    <!-- Description -->
+    <div class="form-field">
+      <label for="incidentDescription">Description <span aria-hidden="true">*</span></label>
+      <textarea
+        id="incidentDescription"
+        formControlName="description"
+        rows="4"
+        aria-required="true"
+        [attr.aria-invalid]="f['description'].invalid && f['description'].touched"
+        [attr.aria-describedby]="(f['description'].invalid && f['description'].touched) ? 'descriptionError' : null"
+        placeholder="Full description of what occurred"
+      ></textarea>
+      @if (f['description'].invalid && f['description'].touched) {
+        <span id="descriptionError" class="field-error" role="alert" aria-live="polite">
+          Description is required.
+        </span>
+      }
+    </div>
+
+    <!-- Impact Estimate -->
+    <div class="form-field">
+      <label for="incidentImpact">Impact Estimate (optional)</label>
+      <textarea
+        id="incidentImpact"
+        formControlName="impactEstimate"
+        rows="3"
+        aria-label="Impact estimate (optional)"
+        placeholder="Estimated business impact"
+      ></textarea>
+    </div>
+
+    <!-- Affected Services — multiselect (AC-4) -->
+    <fieldset class="form-fieldset">
+      <legend>Affected Critical Services (optional)</legend>
+
+      @if (servicesLoadState() === 'loading') {
+        <p role="status" aria-live="polite">Loading available services…</p>
+      }
+
+      @if (servicesLoadState() === 'error') {
+        <p class="field-error" role="alert">
+          Could not load services: {{ servicesError() }}
+        </p>
+      }
+
+      @if (servicesLoadState() === 'loaded') {
+        @if (availableServices().length === 0) {
+          <p class="empty-state">No active critical services configured.</p>
+        } @else {
+          <ul class="services-list" role="group" aria-label="Select affected critical services">
+            @for (svc of availableServices(); track svc.id) {
+              <li>
+                <label class="service-option">
+                  <input
+                    type="checkbox"
+                    [checked]="isServiceSelected(svc.id)"
+                    (change)="toggleService(svc.id)"
+                    [attr.aria-label]="'Select ' + svc.name"
+                  />
+                  <span>{{ svc.name }}</span>
+                  @if (svc.description) {
+                    <span class="service-description">{{ svc.description }}</span>
+                  }
+                </label>
+              </li>
+            }
+          </ul>
+        }
+      }
+    </fieldset>
+
+    <!-- Affected ICT Assets — add-as-you-go (AC-5) -->
+    <fieldset class="form-fieldset" formArrayName="assets">
+      <legend>Affected ICT Assets (optional)</legend>
+
+      @for (row of assetsArray.controls; track $index) {
+        <div class="asset-row" [formGroupName]="$index" role="group" [attr.aria-label]="'Asset row ' + ($index + 1)">
+          <div class="form-field-inline">
+            <label [for]="'assetName' + $index">Asset Name <span aria-hidden="true">*</span></label>
+            <input
+              [id]="'assetName' + $index"
+              type="text"
+              formControlName="name"
+              maxlength="200"
+              aria-required="true"
+              [attr.aria-invalid]="assetControl($index, 'name').invalid && assetControl($index, 'name').touched"
+              placeholder="e.g. Payment Gateway Server"
+            />
+            @if (assetControl($index, 'name').invalid && assetControl($index, 'name').touched) {
+              <span class="field-error" role="alert">Asset name is required.</span>
+            }
+          </div>
+
+          <div class="form-field-inline">
+            <label [for]="'assetType' + $index">Asset Type <span aria-hidden="true">*</span></label>
+            <input
+              [id]="'assetType' + $index"
+              type="text"
+              formControlName="type"
+              maxlength="100"
+              aria-required="true"
+              [attr.aria-invalid]="assetControl($index, 'type').invalid && assetControl($index, 'type').touched"
+              placeholder="e.g. SERVER, NETWORK_DEVICE"
+            />
+            @if (assetControl($index, 'type').invalid && assetControl($index, 'type').touched) {
+              <span class="field-error" role="alert">Asset type is required.</span>
+            }
+          </div>
+
+          <button
+            type="button"
+            class="btn-remove-asset"
+            (click)="removeAssetRow($index)"
+            [attr.aria-label]="'Remove asset row ' + ($index + 1)"
+          >
+            Remove
+          </button>
+        </div>
+      }
+
+      <button
+        type="button"
+        class="btn-add-asset"
+        (click)="addAssetRow()"
+        aria-label="Add ICT asset row"
+      >
+        + Add ICT Asset
+      </button>
+    </fieldset>
+
+    <!-- Submit error -->
+    @if (submitState() === 'error') {
+      <p class="error-message" role="alert">{{ submitError() }}</p>
+    }
+
+    <!-- Submit button -->
+    <div class="form-actions">
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="submitState() === 'submitting'"
+        aria-label="Submit incident report"
+      >
+        {{ submitState() === 'submitting' ? 'Submitting…' : 'Report Incident' }}
+      </button>
+    </div>
+  </form>
+</main>
