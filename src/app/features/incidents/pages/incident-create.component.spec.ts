@@ -1,4 +1,4 @@
-// @smoke — LLD-05 AC-1, AC-2, AC-4, AC-5, AC-8
+// @smoke — LLD-05 AC-1, AC-2, AC-4, AC-5, AC-8 — Bug #17 (severity select)
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -174,6 +174,7 @@ describe('AC-1, AC-2, AC-4, AC-5, AC-8 — IncidentCreateComponent @smoke', () =
     component.form.patchValue({
       title: 'Payments Outage',
       description: 'Core payments rail down',
+      severity: 'HIGH',
       impactEstimate: 'High',
     });
     component.toggleService('svc-1');
@@ -186,6 +187,7 @@ describe('AC-1, AC-2, AC-4, AC-5, AC-8 — IncidentCreateComponent @smoke', () =
       jasmine.objectContaining({
         title: 'Payments Outage',
         description: 'Core payments rail down',
+        severity: 'HIGH',
         impactEstimate: 'High',
         serviceIds: ['svc-1'],
         assets: [{ name: 'Server A', type: 'SERVER' }],
@@ -198,7 +200,7 @@ describe('AC-1, AC-2, AC-4, AC-5, AC-8 — IncidentCreateComponent @smoke', () =
   it('AC-1: submit error is shown when createIncident fails', () => {
     service.createIncident.and.returnValue(throwError(() => new Error('Server error')));
     fixture.detectChanges();
-    component.form.patchValue({ title: 'Test', description: 'Desc' });
+    component.form.patchValue({ title: 'Test', description: 'Desc', severity: 'MEDIUM' });
     component.onSubmit();
     expect(component.submitState()).toBe('error');
     expect(component.submitError()).toBe('Server error');
@@ -210,6 +212,7 @@ describe('AC-1, AC-2, AC-4, AC-5, AC-8 — IncidentCreateComponent @smoke', () =
     const longTitle = 'a'.repeat(201);
     component.form.get('title')!.setValue(longTitle);
     component.form.get('description')!.setValue('desc');
+    component.form.get('severity')!.setValue('HIGH');
     component.onSubmit();
     expect(service.createIncident).not.toHaveBeenCalled();
   });
@@ -223,5 +226,66 @@ describe('AC-1, AC-2, AC-4, AC-5, AC-8 — IncidentCreateComponent @smoke', () =
     const heading = fixture.nativeElement.querySelector('h1');
     expect(heading).toBeTruthy();
     expect(heading.textContent).toContain('Report New Incident');
+  });
+
+  // ── Bug #17 — severity <select> field ──────────────────────────────────────
+
+  it('Bug #17 AC-1: severity select renders in the template', () => {
+    fixture.detectChanges();
+    const select = fixture.nativeElement.querySelector('select[formcontrolname="severity"]');
+    expect(select).toBeTruthy();
+  });
+
+  it('Bug #17 AC-1: severity select has options for CRITICAL, HIGH, MEDIUM, LOW', () => {
+    fixture.detectChanges();
+    const select = fixture.nativeElement.querySelector('select[formcontrolname="severity"]');
+    const options: HTMLOptionElement[] = Array.from(select.querySelectorAll('option[value]'));
+    const values = options.map((o) => o.value);
+    expect(values).toContain('CRITICAL');
+    expect(values).toContain('HIGH');
+    expect(values).toContain('MEDIUM');
+    expect(values).toContain('LOW');
+  });
+
+  it('Bug #17 AC-1: severity FormControl exists in the form', () => {
+    fixture.detectChanges();
+    expect(component.form.get('severity')).toBeTruthy();
+  });
+
+  it('Bug #17 AC-1: severity defaults to null', () => {
+    fixture.detectChanges();
+    expect(component.form.get('severity')!.value).toBeNull();
+  });
+
+  it('Bug #17 AC-1: severity FormControl can be set to HIGH', () => {
+    fixture.detectChanges();
+    component.form.patchValue({ severity: 'HIGH' });
+    expect(component.form.get('severity')!.value).toBe('HIGH');
+  });
+
+  it('Bug #17 AC-1: severity is included in the submitted payload when set', () => {
+    service.createIncident.and.returnValue(of(MOCK_INCIDENT));
+    fixture.detectChanges();
+    component.form.patchValue({ title: 'Test', description: 'Desc', severity: 'CRITICAL' });
+
+    component.onSubmit();
+
+    expect(service.createIncident).toHaveBeenCalledOnceWith(
+      jasmine.objectContaining({ severity: 'CRITICAL' }),
+    );
+  });
+
+  it('Bug #17 AC-1: severity is absent from payload when null (optional field)', () => {
+    service.createIncident.and.returnValue(of(MOCK_INCIDENT));
+    fixture.detectChanges();
+    component.form.patchValue({ title: 'Test', description: 'Desc' });
+    // severity is null — omitted from payload (undefined strips the key)
+
+    component.onSubmit();
+
+    // createIncident is still called — severity is optional in the form
+    expect(service.createIncident).toHaveBeenCalledTimes(1);
+    const callArgs = service.createIncident.calls.first().args[0];
+    expect(callArgs['severity']).toBeUndefined();
   });
 });

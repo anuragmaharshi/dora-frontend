@@ -55,6 +55,29 @@
       }
     </div>
 
+    <!-- Severity — Bug #17 fix: E2E expects select[formcontrolname='severity'] -->
+    <div class="form-field">
+      <label for="incidentSeverity">Severity <span aria-hidden="true">*</span></label>
+      <select
+        id="incidentSeverity"
+        formControlName="severity"
+        aria-required="true"
+        aria-label="Incident severity"
+        [attr.aria-invalid]="f['severity'].invalid && f['severity'].touched"
+        [attr.aria-describedby]="(f['severity'].invalid && f['severity'].touched) ? 'severityError' : null"
+      >
+        <option [ngValue]="null" disabled>Select severity…</option>
+        @for (opt of severityOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+      @if (f['severity'].invalid && f['severity'].touched) {
+        <span id="severityError" class="field-error" role="alert" aria-live="polite">
+          Severity is required.
+        </span>
+      }
+    </div>
+
     <!-- Impact Estimate -->
     <div class="form-field">
       <label for="incidentImpact">Impact Estimate (optional)</label>

@@ -1,4 +1,5 @@
-// @smoke — LLD-05 AC-8 (PLATFORM_ADMIN blocked from /incidents/new)
+// @smoke — LLD-05 AC-8 (PLATFORM_ADMIN blocked from /incidents/new and /incidents list)
+// Bug #18 fix: /incidents list route now also blocks PLATFORM_ADMIN
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
@@ -78,6 +79,37 @@ describe('AC-8 — incidentRoutes guard @smoke', () => {
     authService.isAuthenticated.and.returnValue(false);
 
     await router.navigate(['/incidents/new']);
+    expect(router.url).toBe('/login');
+  });
+
+  // ── Bug #18 — PLATFORM_ADMIN blocked from /incidents list (base route) ─────
+
+  it('Bug #18 AC-8: PLATFORM_ADMIN is redirected to /403 on the /incidents list route', async () => {
+    // PLATFORM_ADMIN does NOT have any of the allowed bank roles.
+    authService.hasRole.and.callFake((role: string) =>
+      role === 'PLATFORM_ADMIN',
+    );
+
+    await router.navigate(['/incidents']);
+    // roleGuard redirects to /403 — base /incidents route is now guarded.
+    expect(router.url).toBe('/403');
+  });
+
+  it('Bug #18 AC-8: INCIDENT_MANAGER can access the /incidents list route', async () => {
+    authService.hasRole.and.callFake((role: string) =>
+      ['OPS_ANALYST', 'INCIDENT_MANAGER', 'COMPLIANCE_OFFICER', 'CISO'].includes(role),
+    );
+
+    await router.navigate(['/incidents']);
+    // Guard passes — not redirected to /403 or /login.
+    expect(router.url).not.toBe('/403');
+    expect(router.url).not.toBe('/login');
+  });
+
+  it('Bug #18 AC-8: unauthenticated user is redirected to /login on the /incidents list route', async () => {
+    authService.isAuthenticated.and.returnValue(false);
+
+    await router.navigate(['/incidents']);
     expect(router.url).toBe('/login');
   });
 });
