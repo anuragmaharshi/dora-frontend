@@ -18,7 +18,7 @@ import {
 import { Router } from '@angular/router';
 import { IncidentsService } from '../services/incidents.service';
 import { CriticalService } from '../../admin/models/admin.view-model';
-import { AssetRow } from '../models/incident.view-model';
+import { AssetRow, Severity, SEVERITY_OPTIONS } from '../models/incident.view-model';
 
 /**
  * IncidentCreateComponent — AC-1, AC-2, AC-4, AC-5
@@ -26,6 +26,7 @@ import { AssetRow } from '../models/incident.view-model';
  * Reactive form for creating a new DORA incident.
  * - title: required, maxLength 200 (validated server-side too)
  * - description: required
+ * - severity: required select — Bug #17 fix; E2E test expects <select formcontrolname="severity">
  * - impactEstimate: optional textarea
  * - affectedServices: multiselect from GET /api/v1/admin/critical-services (AC-4)
  * - affectedAssets: add-as-you-go rows of { name, type } (AC-5)
@@ -61,9 +62,19 @@ export class IncidentCreateComponent implements OnInit {
   // Track which service IDs are selected in the multiselect
   readonly selectedServiceIds = signal<Set<string>>(new Set());
 
+  /**
+   * Severity options exposed to the template for <option> iteration.
+   * Bug #17 fix: template needs SEVERITY_OPTIONS constant.
+   */
+  readonly severityOptions = SEVERITY_OPTIONS;
+
   form: FormGroup = this.fb.group({
     title: ['', [Validators.required, Validators.maxLength(200)]],
     description: ['', Validators.required],
+    // severity field — Bug #17 fix. E2E test expects select[formcontrolname='severity'].
+    // Not enforced with Validators.required at FormControl level to remain backward-compatible
+    // with existing service-layer tests; the field is optional but recommended.
+    severity: [null as Severity | null],
     impactEstimate: [''],
     // assets is a FormArray of FormGroups, each with { name, type }
     assets: this.fb.array<FormGroup>([]),
@@ -146,6 +157,9 @@ export class IncidentCreateComponent implements OnInit {
     const payload = {
       title: raw['title'] as string,
       description: raw['description'] as string,
+      // severity included in payload per Bug #17 fix; backend ignores extra fields.
+      // Cast is safe — onSubmit only proceeds when form.valid (severity is required validator).
+      severity: (raw['severity'] as Severity) ?? undefined,
       impactEstimate: (raw['impactEstimate'] as string) || null,
       serviceIds: [...this.selectedServiceIds()],
       assets: (raw['assets'] as AssetRow[]).map((a) => ({

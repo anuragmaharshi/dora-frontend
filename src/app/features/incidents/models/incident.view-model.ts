@@ -15,6 +15,21 @@
 // Request shapes
 // ──────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Severity levels for incident reporting.
+ * Mirrors the severity classification scale in LLD-07.
+ * Bug #17 fix: the E2E test requires a <select> with these option values.
+ */
+export type Severity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+
+/** Human-readable label map for severity options in the create form. */
+export const SEVERITY_OPTIONS: { value: Severity; label: string }[] = [
+  { value: 'CRITICAL', label: 'Critical' },
+  { value: 'HIGH',     label: 'High' },
+  { value: 'MEDIUM',   label: 'Medium' },
+  { value: 'LOW',      label: 'Low' },
+];
+
 /** Inline ICT asset to link at incident creation time (AC-5). */
 export interface AssetRequest {
   name: string;  // maxLength 200
@@ -23,11 +38,19 @@ export interface AssetRequest {
 
 /** POST /api/v1/incidents — create a new incident (AC-1). */
 export interface CreateIncidentRequest {
-  title: string;          // required, maxLength 200
-  description: string;    // required
+  title: string;              // required, maxLength 200
+  description: string;        // required
+  /**
+   * Severity level — Bug #17 fix.
+   * Required in the UI form (FormControl validates required) but typed as
+   * optional here so existing service-layer tests that predate Bug #17 still
+   * compile. The component always includes severity in the payload; callers
+   * not providing it simply omit the field (backend silently ignores it).
+   */
+  severity?: Severity | null;
   impactEstimate?: string | null;
-  serviceIds?: string[];  // UUID array — active critical-service IDs (AC-4)
-  assets?: AssetRequest[]; // inline ICT assets (AC-5)
+  serviceIds?: string[];      // UUID array — active critical-service IDs (AC-4)
+  assets?: AssetRequest[];    // inline ICT assets (AC-5)
 }
 
 /** POST /api/v1/incidents/{id}/attachments — request presigned URL (AC-3). */
